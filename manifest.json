@@ -1,6 +1,6 @@
 {
-  "lastAction": "pull",
-  "lastUpdatedUtc": "20260530-040626",
+  "lastAction": "apply",
+  "lastUpdatedUtc": "20260530-145913",
   "piAgentSource": "/Users/tao.exe/.pi/agent",
   "trackedAgentPaths": [
     "settings.json",

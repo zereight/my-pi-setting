@@ -4,7 +4,8 @@
   "defaultModel": "composer-2.5",
   "defaultThinkingLevel": "off",
   "packages": [
-    "npm:pi-cursor-sdk"
+    "npm:pi-cursor-sdk",
+    "npm:pi-dynamic-workflows"
   ],
   "extensions": [],
   "enabledModels": [
