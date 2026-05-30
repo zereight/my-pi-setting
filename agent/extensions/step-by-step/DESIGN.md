@@ -17,13 +17,17 @@ The core value is **pacing** — building at a human pace, one verified incremen
 IDLE → PLANNING → STEPPING → REVIEWING
                       ↑           │
                       └───────────┘
-                      (compact & next)
+                      (compact & next / run-to auto)
+
+STEPPING / REVIEWING ──pause──► PAUSED ──resume──► (previous state)
+Any active ──stop──► IDLE
 ```
 
 - **IDLE** — No session active. Normal Pi behaviour.
 - **PLANNING** — Pi breaks the user's request into a rough outline of small steps (descriptions only, no code). The user can review and adjust the plan before starting.
 - **STEPPING** — Pi reads the current state of the project, builds the next small increment, and explains what it did and why.
 - **REVIEWING** — The user reviews the step: asks questions, requests changes, discusses tradeoffs, writes their own version, or simply moves on. Free-form conversation until the user advances.
+- **PAUSED** — Step prompts are off; the plan and progress are kept. Use for unrelated work, then resume.
 
 ## Commands
 
@@ -32,6 +36,11 @@ IDLE → PLANNING → STEPPING → REVIEWING
 | `/step-by-step:start <topic>` | IDLE | Starts a session → PLANNING |
 | `/step-by-step:next` | REVIEWING | Compacts (if needed) and advances → STEPPING |
 | `/step-by-step:skip` | STEPPING, REVIEWING | Skips current step → STEPPING (or IDLE if last) |
+| `/step-by-step:skip-to <N>` | STEPPING, REVIEWING | Skips current through N−1, starts step N |
+| `/step-by-step:run-to <N>` | REVIEWING | Auto-advances (build + review loop) until step N, then pauses for review |
+| `/step-by-step:pause` | STEPPING, REVIEWING | Pause mode — no step prompts; plan kept |
+| `/step-by-step:resume` | PAUSED | Resume previous state (stepping or reviewing) |
+| `/step-by-step:stop` | Any active | End session → IDLE |
 | `/step-by-step:show-plan` | Any (except IDLE) | Shows the full plan with completion progress |
 
 ## UI
@@ -77,5 +86,7 @@ During STEPPING, the extension reads `event.systemPromptOptions.skills` and list
 - **Incremental, not top-down** — Each step is a small, working addition. Not a decomposition of a finished application.
 - **No tool restrictions** — Full Pi access at all times.
 - **No forced learning mode** — The user reviews each step however they want: read and approve, ask questions, rewrite it themselves, or discuss alternatives.
-- **No explicit end command** — Session ends naturally when all steps complete, or when the user starts a new Pi session.
+- **Explicit stop** — `/step-by-step:stop` ends early; otherwise the session finishes when all steps complete.
+- **Pause for detours** — `/step-by-step:pause` turns off step prompts so you can do other work without losing the plan.
+- **Bulk skip / auto-run** — `skip-to` jumps ahead without building; `run-to` builds each step automatically until the target step, where review pauses (no git commit prompts during auto-run).
 - **Conditional compaction** — Only compacts when context usage warrants it, to avoid losing useful context on early steps.

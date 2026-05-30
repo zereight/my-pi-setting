@@ -12,7 +12,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 
 // --- Types ---
 
-type State = "idle" | "planning" | "stepping" | "reviewing";
+type State = "idle" | "planning" | "stepping" | "reviewing" | "paused";
 
 interface PlanStep {
 	title: string;
@@ -24,6 +24,8 @@ interface StepState {
 	topic: string;
 	plan: PlanStep[];
 	currentStep: number;
+	pausedFrom?: Exclude<State, "idle" | "paused">;
+	autoRunTarget?: number;
 }
 
 // --- Default state ---
@@ -50,6 +52,14 @@ function remainingStepsList(steps: StepState): string {
 		.filter((s) => s.num > steps.currentStep && s.status === "pending")
 		.map((s) => `  ${s.num}. ${s.title}`)
 		.join("\n");
+}
+
+function parseStepNumber(args: string | undefined): number | null {
+	const trimmed = args?.trim();
+	if (!trimmed) return null;
+	const n = Number(trimmed);
+	if (!Number.isInteger(n) || n < 1) return null;
+	return n;
 }
 
 // --- System prompts per state ---
@@ -112,7 +122,7 @@ ${skillInstruction}
 3. Write the code for JUST this step — the next small increment. Keep it minimal.
 4. Explain what you did and why — what does this step add, and what design choices did you make?
 
-If this step is no longer needed — because it was already covered by a previous step, or the project has moved past it — say so clearly and recommend the user skip it with /step-by-step:skip. Do not try to force a redundant step to fit.
+If this step is no longer needed — because it was already covered by a previous step, or the project has moved past it — say so clearly and recommend the user skip it with /step-by-step:skip or /step-by-step:skip-to <N>. Do not try to force a redundant step to fit.
 
 The user will review your work, discuss it with you, and may ask you to adjust it before moving on.`;
 	},
@@ -134,7 +144,7 @@ The user may:
 Help them however they need. If they've written their own code, compare approaches and discuss tradeoffs as a peer.
 ${remaining ? `\nRemaining steps:\n${remaining}\n\nReview the remaining steps. If any are now redundant — because they were already covered, or the project has moved past them — list them at the end of your response like this:\n\n[REDUNDANT: 7, 10, 12]\n\nOnly flag steps that are clearly unnecessary. If unsure, leave them in.` : ""}
 
-IMPORTANT: Do NOT advance to the next step. Do NOT present the next step's code or instructions. The user will use /step-by-step:next when they are ready to move on. Your only job right now is to help with the CURRENT step.`;
+IMPORTANT: Do NOT advance to the next step. Do NOT present the next step's code or instructions. The user will use /step-by-step:next (or /step-by-step:run-to <N> to auto-advance) when they are ready to move on. Your only job right now is to help with the CURRENT step.`;
 	},
 };
 
@@ -142,6 +152,15 @@ IMPORTANT: Do NOT advance to the next step. Do NOT present the next step's code 
 
 export default function stepByStep(pi: ExtensionAPI) {
 	let steps: StepState = defaultState();
+
+	function isActiveSession(): boolean {
+		return steps.state !== "idle";
+	}
+
+	/** Queue a step prompt without racing the in-flight agent turn. */
+	function queueStepUserMessage(message: string) {
+		pi.sendUserMessage(message, { deliverAs: "followUp" });
+	}
 
 	// --- UI updates ---
 
@@ -155,7 +174,14 @@ export default function stepByStep(pi: ExtensionAPI) {
 		const total = steps.plan.length;
 
 		// Footer status
-		const stateLabel = steps.state === "stepping" ? "building" : steps.state;
+		const stateLabel =
+			steps.state === "stepping"
+				? "building"
+				: steps.state === "paused"
+					? "paused"
+					: steps.autoRunTarget
+						? `auto → ${steps.autoRunTarget}`
+						: steps.state;
 		ctx.ui.setStatus(
 			"step-by-step",
 			ctx.ui.theme.fg("accent", `🔨 step ${steps.currentStep}/${total} — ${stateLabel}`),
@@ -229,6 +255,8 @@ export default function stepByStep(pi: ExtensionAPI) {
 
 		if (next > steps.plan.length) {
 			steps.state = "idle";
+			steps.autoRunTarget = undefined;
+			steps.pausedFrom = undefined;
 			persist();
 			updateUI(ctx);
 			return false;
@@ -241,13 +269,99 @@ export default function stepByStep(pi: ExtensionAPI) {
 		return true;
 	}
 
+	async function finishReviewingAndAdvanceAsync(
+		ctx: ExtensionContext,
+		options: { skipCommit?: boolean } = {},
+	): Promise<boolean> {
+		const stepNum = steps.currentStep;
+		markCurrentStep("done");
+		const hasMore = advanceStep(ctx);
+
+		if (!hasMore) {
+			ctx.ui.notify("🎉 All steps complete!", "success");
+			pi.sendMessage(
+				{
+					customType: "step-by-step-complete",
+					content: `**All steps complete!** 🎉\n\nYou've worked through all steps of: "${steps.topic}"`,
+					display: true,
+				},
+				{ triggerTurn: false },
+			);
+			return false;
+		}
+
+		if (!options.skipCommit) {
+			try {
+				const { stdout: statusOut } = await pi.exec("git", ["status", "--porcelain"]);
+				if (statusOut.trim()) {
+					const shouldCommit = await ctx.ui.confirm(
+						"Commit?",
+						`Commit step ${stepNum} before moving on?`,
+					);
+					if (shouldCommit) {
+						await pi.exec("git", ["add", "-A"]);
+						await pi.exec("git", [
+							"commit",
+							"-m",
+							`step ${stepNum}: ${currentStepTitle({ ...steps, currentStep: stepNum } as StepState)}`,
+						]);
+						ctx.ui.notify(`Committed step ${stepNum}.`, "success");
+					}
+				}
+			} catch {
+				// Not a git repo or git not available — skip silently
+			}
+		}
+
+		const nextStepMessage = `Let's move on to step ${steps.currentStep}: ${currentStepTitle(steps)}. Read the current project files and build the next increment.`;
+
+		const usage = ctx.getContextUsage();
+		const shouldCompact = usage && usage.contextWindow > 0 && usage.tokens > usage.contextWindow * 0.5;
+
+		if (shouldCompact) {
+			ctx.ui.notify(`Step ${stepNum} complete. Compacting and moving to step ${steps.currentStep}...`, "info");
+			ctx.compact({
+				customInstructions: `Summarise step ${stepNum}. Preserve: what was built, key design decisions, and any concerns raised. Discard: full code listings.`,
+				onComplete: () => {
+					queueStepUserMessage(nextStepMessage);
+				},
+				onError: (err) => {
+					ctx.ui.notify(`Compaction failed: ${err.message}. Continuing anyway.`, "error");
+					queueStepUserMessage(nextStepMessage);
+				},
+			});
+		} else {
+			ctx.ui.notify(`Step ${stepNum} complete. Moving to step ${steps.currentStep}...`, "info");
+			queueStepUserMessage(nextStepMessage);
+		}
+
+		return true;
+	}
+
+	function jumpToStep(targetStep: number, ctx: ExtensionContext, markStatus: "skipped" | "done") {
+		for (let i = steps.currentStep; i < targetStep; i++) {
+			const step = steps.plan[i - 1];
+			if (step.status === "pending") {
+				step.status = markStatus;
+			}
+		}
+		steps.currentStep = targetStep;
+		steps.state = "stepping";
+		steps.autoRunTarget = undefined;
+		persist();
+		updateUI(ctx);
+	}
+
 	// --- Commands ---
 
 	pi.registerCommand("step-by-step:start", {
 		description: "Start a step-by-step building session",
 		handler: async (args, ctx) => {
 			if (steps.state !== "idle") {
-				ctx.ui.notify("A step-by-step session is already active. Finish it or start a new Pi session.", "error");
+				ctx.ui.notify(
+					"A step-by-step session is already active. Use /step-by-step:stop to end it, or start a new Pi session.",
+					"error",
+				);
 				return;
 			}
 
@@ -263,7 +377,7 @@ export default function stepByStep(pi: ExtensionAPI) {
 			persist();
 			updateUI(ctx);
 
-			pi.sendUserMessage(`I want to build: ${topic}\n\nPlease break this down into small, incremental steps.`);
+			queueStepUserMessage(`I want to build: ${topic}\n\nPlease break this down into small, incremental steps.`);
 		},
 	});
 
@@ -274,69 +388,16 @@ export default function stepByStep(pi: ExtensionAPI) {
 				ctx.ui.notify(
 					steps.state === "idle"
 						? "No step-by-step session active. Use /step-by-step:start"
-						: `Can't advance in ${steps.state} state. Expected: reviewing`,
+						: steps.state === "paused"
+							? "Session is paused. Use /step-by-step:resume first."
+							: `Can't advance in ${steps.state} state. Expected: reviewing`,
 					"error",
 				);
 				return;
 			}
 
-			const stepNum = steps.currentStep;
-			markCurrentStep("done");
-			const hasMore = advanceStep(ctx);
-
-			if (!hasMore) {
-				ctx.ui.notify("🎉 All steps complete!", "success");
-				pi.sendMessage(
-					{
-						customType: "step-by-step-complete",
-						content: `**All steps complete!** 🎉\n\nYou've worked through all steps of: "${steps.topic}"`,
-						display: true,
-					},
-					{ triggerTurn: false },
-				);
-				return;
-			}
-
-			// Offer to commit the step
-			try {
-				const { stdout: statusOut } = await pi.exec("git", ["status", "--porcelain"]);
-				if (statusOut.trim()) {
-					const shouldCommit = await ctx.ui.confirm(
-						"Commit?",
-						`Commit step ${stepNum} before moving on?`,
-					);
-					if (shouldCommit) {
-						await pi.exec("git", ["add", "-A"]);
-						await pi.exec("git", ["commit", "-m", `step ${stepNum}: ${currentStepTitle({ ...steps, currentStep: stepNum } as StepState)}`]);
-						ctx.ui.notify(`Committed step ${stepNum}.`, "success");
-					}
-				}
-			} catch {
-				// Not a git repo or git not available — skip silently
-			}
-
-			const nextStepMessage = `Let's move on to step ${steps.currentStep}: ${currentStepTitle(steps)}. Read the current project files and build the next increment.`;
-
-			// Only compact if context is above 50% of the window
-			const usage = ctx.getContextUsage();
-			const shouldCompact = usage && usage.contextWindow > 0 && usage.tokens > usage.contextWindow * 0.5;
-
-			if (shouldCompact) {
-				ctx.ui.notify(`Step ${stepNum} complete. Compacting and moving to step ${steps.currentStep}...`, "info");
-				ctx.compact({
-					customInstructions: `Summarise step ${stepNum}. Preserve: what was built, key design decisions, and any concerns raised. Discard: full code listings.`,
-					onComplete: () => {
-						pi.sendUserMessage(nextStepMessage);
-					},
-					onError: (err) => {
-						ctx.ui.notify(`Compaction failed: ${err.message}. Continuing anyway.`, "error");
-						pi.sendUserMessage(nextStepMessage);
-					},
-				});
-			} else {
-				ctx.ui.notify(`Step ${stepNum} complete. Moving to step ${steps.currentStep}...`, "info");
-				pi.sendUserMessage(nextStepMessage);
-			}
+			steps.autoRunTarget = undefined;
+			await finishReviewingAndAdvanceAsync(ctx);
 		},
 	});
 
@@ -353,6 +414,7 @@ export default function stepByStep(pi: ExtensionAPI) {
 				return;
 			}
 
+			steps.autoRunTarget = undefined;
 			const skippedStep = steps.currentStep;
 			markCurrentStep("skipped");
 			const hasMore = advanceStep(ctx);
@@ -363,9 +425,164 @@ export default function stepByStep(pi: ExtensionAPI) {
 			}
 
 			ctx.ui.notify(`Skipped step ${skippedStep}. Moving to step ${steps.currentStep}: ${currentStepTitle(steps)}.`, "info");
-			pi.sendUserMessage(
+			queueStepUserMessage(
 				`Step ${skippedStep} skipped. Let's move to step ${steps.currentStep}: ${currentStepTitle(steps)}. Read the current project files and build the next increment.`,
 			);
+		},
+	});
+
+	pi.registerCommand("step-by-step:skip-to", {
+		description: "Skip from the current step up to (but not including) step N, then start step N",
+		handler: async (args, ctx) => {
+			if (steps.state !== "stepping" && steps.state !== "reviewing") {
+				ctx.ui.notify(
+					steps.state === "idle"
+						? "No step-by-step session active. Use /step-by-step:start"
+						: steps.state === "paused"
+							? "Session is paused. Use /step-by-step:resume first."
+							: `Can't skip-to in ${steps.state} state. Expected: stepping or reviewing`,
+					"error",
+				);
+				return;
+			}
+
+			const target = parseStepNumber(args);
+			if (target === null) {
+				ctx.ui.notify("Usage: /step-by-step:skip-to <step-number>", "error");
+				return;
+			}
+
+			if (target <= steps.currentStep) {
+				ctx.ui.notify(
+					`Target must be after the current step (${steps.currentStep}). Use /step-by-step:skip for one step.`,
+					"error",
+				);
+				return;
+			}
+
+			if (target > steps.plan.length) {
+				ctx.ui.notify(`Invalid step ${target}. Plan has ${steps.plan.length} steps.`, "error");
+				return;
+			}
+
+			const fromStep = steps.currentStep;
+			jumpToStep(target, ctx, "skipped");
+			ctx.ui.notify(
+				`Skipped steps ${fromStep}–${target - 1}. Starting step ${target}: ${currentStepTitle(steps)}.`,
+				"info",
+			);
+			queueStepUserMessage(
+				`Steps ${fromStep} through ${target - 1} were skipped. Start step ${target}: ${currentStepTitle(steps)}. Read the current project files and build this increment.`,
+			);
+		},
+	});
+
+	pi.registerCommand("step-by-step:run-to", {
+		description: "Auto-advance through steps until step N (review pauses at N)",
+		handler: async (args, ctx) => {
+			if (steps.state !== "reviewing") {
+				ctx.ui.notify(
+					steps.state === "idle"
+						? "No step-by-step session active. Use /step-by-step:start"
+						: steps.state === "paused"
+							? "Session is paused. Use /step-by-step:resume first."
+							: `Can't run-to in ${steps.state} state. Expected: reviewing`,
+					"error",
+				);
+				return;
+			}
+
+			const target = parseStepNumber(args);
+			if (target === null) {
+				ctx.ui.notify("Usage: /step-by-step:run-to <step-number>", "error");
+				return;
+			}
+
+			if (target <= steps.currentStep) {
+				ctx.ui.notify(`Target must be after the current step (${steps.currentStep}).`, "error");
+				return;
+			}
+
+			if (target > steps.plan.length) {
+				ctx.ui.notify(`Invalid step ${target}. Plan has ${steps.plan.length} steps.`, "error");
+				return;
+			}
+
+			steps.autoRunTarget = target;
+			persist();
+			updateUI(ctx);
+			ctx.ui.notify(
+				`Auto-running from step ${steps.currentStep} to step ${target}. Review will pause at step ${target}.`,
+				"info",
+			);
+			await finishReviewingAndAdvanceAsync(ctx, { skipCommit: true });
+		},
+	});
+
+	pi.registerCommand("step-by-step:pause", {
+		description: "Pause step-by-step mode and work freely (plan kept)",
+		handler: async (_args, ctx) => {
+			if (!isActiveSession() || steps.state === "idle") {
+				ctx.ui.notify("No step-by-step session active. Use /step-by-step:start", "error");
+				return;
+			}
+
+			if (steps.state === "paused") {
+				ctx.ui.notify("Already paused. Use /step-by-step:resume to continue the plan.", "info");
+				return;
+			}
+
+			if (steps.state === "planning") {
+				ctx.ui.notify("Finish or adjust the plan first, or use /step-by-step:stop to end the session.", "error");
+				return;
+			}
+
+			steps.pausedFrom = steps.state;
+			steps.autoRunTarget = undefined;
+			setState("paused", ctx);
+			ctx.ui.notify(
+				"Step-by-step paused — no step prompts. Plan is saved. Use /step-by-step:resume or /step-by-step:stop.",
+				"info",
+			);
+		},
+	});
+
+	pi.registerCommand("step-by-step:resume", {
+		description: "Resume step-by-step mode after pause",
+		handler: async (_args, ctx) => {
+			if (steps.state !== "paused") {
+				ctx.ui.notify(
+					steps.state === "idle"
+						? "No step-by-step session active. Use /step-by-step:start"
+						: "Not paused. Nothing to resume.",
+					"error",
+				);
+				return;
+			}
+
+			const resumeState = steps.pausedFrom ?? "reviewing";
+			steps.pausedFrom = undefined;
+			setState(resumeState, ctx);
+			ctx.ui.notify(
+				`Resumed at step ${steps.currentStep} (${resumeState}). ${resumeState === "reviewing" ? "Use /step-by-step:next when ready." : ""}`,
+				"info",
+			);
+		},
+	});
+
+	pi.registerCommand("step-by-step:stop", {
+		description: "End the step-by-step session",
+		handler: async (_args, ctx) => {
+			if (!isActiveSession()) {
+				ctx.ui.notify("No step-by-step session active.", "info");
+				return;
+			}
+
+			const topic = steps.topic;
+			steps = defaultState();
+			persist();
+			updateUI(ctx);
+			ctx.ui.notify(`Step-by-step session ended${topic ? `: "${topic}"` : ""}.`, "info");
 		},
 	});
 
@@ -380,10 +597,13 @@ export default function stepByStep(pi: ExtensionAPI) {
 			const doneCount = steps.plan.filter((s) => s.status === "done").length;
 			const lines = [
 				`🔨 Building: ${steps.topic}`,
-				`State: ${steps.state}`,
+				`State: ${steps.state}${steps.state === "paused" && steps.pausedFrom ? ` (was ${steps.pausedFrom})` : ""}`,
 				`Progress: ${doneCount} done, step ${steps.currentStep} of ${steps.plan.length}`,
-				"",
 			];
+			if (steps.autoRunTarget) {
+				lines.push(`Auto-run target: step ${steps.autoRunTarget}`);
+			}
+			lines.push("");
 
 			for (let i = 0; i < steps.plan.length; i++) {
 				const step = steps.plan[i];
@@ -460,16 +680,15 @@ export default function stepByStep(pi: ExtensionAPI) {
 		setState("stepping", ctx);
 
 		ctx.ui.notify(`Plan confirmed with ${steps.plan.length} steps. Starting step 1: ${currentStepTitle(steps)}.`, "success");
-		pi.sendUserMessage(
+		queueStepUserMessage(
 			`Plan confirmed. Let's start with step 1: ${currentStepTitle(steps)}. Read the current project files and build the first increment.`,
-			{ streamingBehavior: "followUp" },
 		);
 	});
 
 	// --- System prompt injection ---
 
 	pi.on("before_agent_start", async (event) => {
-		if (steps.state === "idle") return;
+		if (steps.state === "idle" || steps.state === "paused") return;
 
 		const promptFn = SYSTEM_PROMPTS[steps.state];
 		if (!promptFn) return;
@@ -494,6 +713,27 @@ export default function stepByStep(pi: ExtensionAPI) {
 		if (steps.state !== "stepping") return;
 
 		setState("reviewing", ctx);
+
+		if (steps.autoRunTarget !== undefined && steps.currentStep < steps.autoRunTarget) {
+			ctx.ui.notify(
+				`Step ${steps.currentStep} built (auto-run → ${steps.autoRunTarget}). Advancing...`,
+				"info",
+			);
+			await finishReviewingAndAdvanceAsync(ctx, { skipCommit: true });
+			return;
+		}
+
+		if (steps.autoRunTarget !== undefined && steps.currentStep === steps.autoRunTarget) {
+			steps.autoRunTarget = undefined;
+			persist();
+			updateUI(ctx);
+			ctx.ui.notify(
+				`Auto-run complete. Review step ${steps.currentStep}: ${currentStepTitle(steps)}. Discuss, adjust, or /step-by-step:next when ready.`,
+				"success",
+			);
+			return;
+		}
+
 		ctx.ui.notify(`Review this step: ${currentStepTitle(steps)}. Discuss, adjust, or /step-by-step:next when ready.`, "info");
 	});
 
@@ -538,7 +778,7 @@ export default function stepByStep(pi: ExtensionAPI) {
 	// --- Filter stale context messages ---
 
 	pi.on("context", async (event) => {
-		if (steps.state === "idle") {
+		if (steps.state === "idle" || steps.state === "paused") {
 			return {
 				messages: event.messages.filter((m) => {
 					const msg = m as { customType?: string };

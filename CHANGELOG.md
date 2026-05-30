@@ -10,6 +10,7 @@ git checkout v0.1.0 && ./scripts/install.sh
 
 ### Added
 
+- **step-by-step** extension: `pause`, `resume`, `stop`, `skip-to`, `run-to`; queue step prompts via `deliverAs: "followUp"` to avoid agent race errors
 - Bilingual docs: `docs/ko/`, `docs/en/`, hub `README.md` and `docs/README.md`
 - `scripts/pull.sh` — sync `~/.pi/agent` → `agent/` (optional `--snapshot`)
 - `scripts/apply.sh` — restore tracked files to `~/.pi/agent`

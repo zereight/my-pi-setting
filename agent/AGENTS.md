@@ -16,6 +16,13 @@
 
 Restore full Pi stack: `cp ~/.pi/agent/settings.json.heavy-20260530.bak ~/.pi/agent/settings.json`
 
+## Step-by-step (Pi TUI)
+
+- Extension: `agent/extensions/step-by-step/` — staged builds with review between steps.
+- Install for teammates: `./scripts/apply.sh` then `/reload` in Pi (not listed in Cursor Agent slash menu).
+- Start: `/step-by-step:start <topic>` · advance: `/step-by-step:next` · bulk: `skip-to`, `run-to` (reviewing only), `pause`, `stop`.
+- Docs: `agent/extensions/step-by-step/README.md`
+
 ## Workflows (light)
 
 - Package: `npm:pi-dynamic-workflows` — multi-agent `workflow` tool (fan-out / pipeline).

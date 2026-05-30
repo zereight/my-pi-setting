@@ -53,6 +53,22 @@ git clone <this-repo> && cd my-pi-setting
 ./scripts/apply.sh
 ```
 
+Pi TUI에서 `/reload` 한 번 (확장은 세션 시작·reload 때 로드됨).
+
+### step-by-step 확장
+
+단계별로 짜고 스텝마다 리뷰하는 Pi 확장 (`agent/extensions/step-by-step/`).
+
+| 단계 | 명령 |
+|------|------|
+| 팀원 설치 | `./scripts/apply.sh` → Pi TUI `/reload` |
+| 시작 | `/step-by-step:start <주제>` |
+| 다음 | `/step-by-step:next` (리뷰 후) |
+| 일괄 스킵 / 자동 빌드 | `skip-to`, `run-to` (자동은 **reviewing** 중만) |
+| 잠깐 빠져나오기 | `pause` / `resume` / `stop` |
+
+자세한 명령·예시: [agent/extensions/step-by-step/README.md](../../agent/extensions/step-by-step/README.md)
+
 원격 + 태그:
 
 ```bash

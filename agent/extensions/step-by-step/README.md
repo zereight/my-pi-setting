@@ -6,14 +6,32 @@ Instead of building everything in one shot, Pi breaks a task into small steps an
 
 ## Install
 
-Copy the extension to your global Pi extensions directory:
+### From this repo (team / my-pi-setting)
+
+Extensions ship under `agent/extensions/`. Apply the tracked agent tree to `~/.pi/agent`:
+
+```bash
+git clone <my-pi-setting-repo> && cd my-pi-setting
+./scripts/apply.sh          # copies agent/extensions/ including step-by-step
+```
+
+Or profile settings only, then extensions:
+
+```bash
+./scripts/install.sh
+./scripts/apply.sh          # extensions only need this if you skipped apply above
+```
+
+In any Pi TUI session: `/reload` (extensions load at session start and on reload).
+
+### Manual copy
 
 ```bash
 mkdir -p ~/.pi/agent/extensions/step-by-step
-cp index.ts ~/.pi/agent/extensions/step-by-step/index.ts
+cp agent/extensions/step-by-step/index.ts ~/.pi/agent/extensions/step-by-step/index.ts
 ```
 
-Then `/reload` in any Pi session to pick it up.
+Then `/reload`.
 
 ## Usage
 
@@ -49,7 +67,23 @@ The conversation is compacted (if needed) and Pi builds the next step.
 | `/step-by-step:start <topic>` | Start a session |
 | `/step-by-step:next` | Done reviewing — advance to next step |
 | `/step-by-step:skip` | Skip the current step |
+| `/step-by-step:skip-to <N>` | Skip from current through step N−1, then start step N |
+| `/step-by-step:run-to <N>` | Auto-build steps until N (review pauses at step N) |
+| `/step-by-step:pause` | Pause step mode — work freely, plan kept |
+| `/step-by-step:resume` | Resume after pause |
+| `/step-by-step:stop` | End the session |
 | `/step-by-step:show-plan` | Show the full plan with progress |
+
+**Examples**
+
+- On step 2, already have steps 3–5 covered: `/step-by-step:skip-to 6`
+- Trust steps 3–7, want to review at 8: `/step-by-step:run-to 8` (**only while reviewing** step 2 — not while Pi is still building)
+- Need to fix something unrelated: `/step-by-step:pause`, then `/step-by-step:resume`
+
+**Notes**
+
+- `run-to` requires **reviewing** state (after Pi finishes the current step). Use `skip-to` to jump ahead without building.
+- Step transitions queue the next prompt with `deliverAs: "followUp"` so they do not race an in-flight agent turn.
 
 ### UI
 
@@ -67,7 +101,10 @@ The extension is a state machine:
 IDLE → PLANNING → STEPPING → REVIEWING
                       ↑           │
                       └───────────┘
-                      (compact & next)
+                      (compact & next / run-to auto)
+
+STEPPING / REVIEWING ──pause──► PAUSED ──resume──► (previous state)
+Any active ──stop──► IDLE
 ```
 
 - **PLANNING** — Pi outlines the steps (descriptions only, no code)

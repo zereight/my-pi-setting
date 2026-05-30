@@ -53,6 +53,22 @@ git clone <this-repo> && cd my-pi-setting
 ./scripts/apply.sh
 ```
 
+In Pi TUI run `/reload` once (extensions load at session start and on reload).
+
+### step-by-step extension
+
+Staged development with review between steps (`agent/extensions/step-by-step/`).
+
+| Step | Command |
+|------|---------|
+| Team install | `./scripts/apply.sh` → Pi TUI `/reload` |
+| Start | `/step-by-step:start <topic>` |
+| Advance | `/step-by-step:next` (after review) |
+| Bulk skip / auto-build | `skip-to`, `run-to` (`run-to` only while **reviewing**) |
+| Detour | `pause` / `resume` / `stop` |
+
+Full reference: [agent/extensions/step-by-step/README.md](../../agent/extensions/step-by-step/README.md)
+
 Remote + tag:
 
 ```bash

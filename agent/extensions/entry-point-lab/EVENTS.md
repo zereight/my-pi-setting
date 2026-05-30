@@ -57,7 +57,7 @@ Register with `pi.on("event_name", async (event, ctx) => { ... })` inside the de
 |-------|------|
 | `before_agent_start` | Planning/stepping/reviewing system prompts |
 | `agent_end` | Plan confirm UI, stepping→reviewing, redundant step parse |
-| `context` | Strip stale `step-by-step-context` when idle |
+| `context` | Strip stale `step-by-step-context` when idle or paused |
 | `session_start` | Restore persisted step state |
 
 ## Order sketch (one user prompt)

@@ -127,5 +127,9 @@ Done.
   pi-cursor          # if shell snippet is sourced
   pi-heavy           # PI_CURSOR_SETTING_SOURCES=all
 
+Extensions (step-by-step, entry-point-lab, …):
+  ./scripts/apply.sh
+  # then in Pi TUI: /reload
+
 Project template (BankX): copy templates/bankx/.pi → your repo root
 EOF
