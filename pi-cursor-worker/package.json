@@ -4,6 +4,20 @@
   "private": true,
   "description": "Pi orchestration with Cursor SDK workers (Agent.prompt as sub-tasks)",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
   "pi": {
     "extensions": [
       "extensions/cursor-worker.ts"
