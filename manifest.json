@@ -1,0 +1,14 @@
+{
+  "lastAction": "pull",
+  "lastUpdatedUtc": "20260530-040626",
+  "piAgentSource": "/Users/tao.exe/.pi/agent",
+  "trackedAgentPaths": [
+    "settings.json",
+    "AGENTS.md",
+    "cursor-sdk.json",
+    "README-cursor-cli.md",
+    "extensions/",
+    "extensions.disabled/",
+    "variants/"
+  ]
+}

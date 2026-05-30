@@ -1,0 +1,37 @@
+{
+  "lastChangelogVersion": "0.77.0",
+  "defaultProvider": "cursor",
+  "defaultModel": "composer-2.5",
+  "defaultThinkingLevel": "off",
+  "packages": ["npm:pi-cursor-sdk"],
+  "extensions": [],
+  "enabledModels": [
+    "cursor/composer-2.5",
+    "cursor/gemini-3.5-flash"
+  ],
+  "thinking": "off",
+  "collapseChangelog": true,
+  "theme": "dark",
+  "compaction": {
+    "enabled": true,
+    "keepRecentTurns": 6
+  },
+  "hideThinkingBlock": true,
+  "retry": {
+    "enabled": true
+  },
+  "terminal": {
+    "showTerminalProgress": true,
+    "clearOnShrink": true
+  },
+  "quietStartup": true,
+  "enableSkillCommands": false,
+  "skills": [],
+  "images": {
+    "blockImages": false
+  },
+  "showHardwareCursor": true,
+  "warnings": {
+    "anthropicExtraUsage": false
+  }
+}

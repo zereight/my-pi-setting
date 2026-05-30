@@ -1,0 +1,20 @@
+# Secrets & machine-local state (never commit)
+**/auth.json
+**/*token*
+**/*credentials*
+**/sessions/
+**/cache/
+**/run-history.jsonl
+**/cursor-sdk-model-list.json
+**/memory/
+**/memory-inbox.md
+**/pi-*.json
+!agent/cursor-sdk.json
+
+# npm install artifacts under agent/npm
+agent/npm/node_modules/
+
+# Optional UTC snapshots (git history is enough for most teams)
+versions/agent/20*/
+
+.DS_Store

@@ -1,0 +1,85 @@
+{
+  "lastChangelogVersion": "0.75.5",
+  "images": {
+    "blockImages": true
+  },
+  "showHardwareCursor": true,
+  "defaultProvider": "cursor",
+  "defaultModel": "composer-2.5",
+  "defaultThinkingLevel": "xhigh",
+  "packages": [
+    "npm:pi-goals",
+    {
+      "source": "npm:pi-powerline-footer@0.4.11"
+    },
+    {
+      "source": "npm:@tmustier/pi-usage-extension@0.1.5"
+    },
+    {
+      "source": "npm:pi-subagents@0.17.0"
+    },
+    "npm:pi-mcp-adapter",
+    "npm:pi-cursor-sdk",
+    "npm:@juicesharp/rpiv-todo",
+    "npm:pi-mermaid",
+    "npm:pi-autocontext"
+  ],
+  "thinking": "high",
+  "collapseChangelog": true,
+  "theme": "dark",
+  "compaction": {
+    "enabled": true,
+    "keepRecentTurns": 6
+  },
+  "extensions": [
+    "/Users/tao.exe/Documents/pi-setup/packages/extensions/usage-insights/dist/index.mjs",
+    "/Users/tao.exe/Documents/pi-setup/packages/extensions/minimal-output/dist/index.mjs",
+    "/Users/tao.exe/Documents/pi-setup/packages/extensions/rtk-rewrite/dist/index.mjs",
+    "/Users/tao.exe/Documents/pi-setup/packages/extensions/tool-pruner/dist/index.mjs",
+    "/Users/tao.exe/.pi/agent/extensions/agent-memory/index.ts",
+    "/Users/tao.exe/.pi/agent/extensions/cursor-mermaid-inline/index.ts"
+  ],
+  "enabledModels": [
+    "openai-codex/gpt-5.5",
+    "opencode-go/deepseek-v4-flash",
+    "opencode-go/deepseek-v4-pro",
+    "cursor/composer-2.5",
+    "cursor/gpt-5-5@1m",
+    "cursor/gemini-3.5-flash"
+  ],
+  "hideThinkingBlock": true,
+  "retry": {
+    "enabled": true
+  },
+  "terminal": {
+    "showTerminalProgress": true,
+    "clearOnShrink": true
+  },
+  "quietStartup": true,
+  "subagents": {
+    "agentOverrides": {
+      "reviewer": {
+        "model": "opencode-go/deepseek-v4-pro",
+        "fallbackModels": [
+          "opencode-go/deepseek-v4-flash",
+          "cursor/composer-2.5"
+        ]
+      },
+      "worker": {
+        "model": "opencode-go/deepseek-v4-flash",
+        "fallbackModels": [
+          "opencode-go/deepseek-v4-pro",
+          "cursor/composer-2.5"
+        ]
+      },
+      "delegate": {
+        "model": "opencode-go/deepseek-v4-flash",
+        "fallbackModels": [
+          "opencode-go/deepseek-v4-pro",
+          "cursor/composer-2.5"
+        ]
+      }
+    }
+  },
+  "treeFilterMode": "all"
+}
