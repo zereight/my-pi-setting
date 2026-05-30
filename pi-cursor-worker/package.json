@@ -1,0 +1,12 @@
+{
+  "name": "pi-cursor-worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pi orchestration with Cursor SDK workers (Agent.prompt as sub-tasks)",
+  "type": "module",
+  "pi": {
+    "extensions": [
+      "extensions/cursor-worker.ts"
+    ]
+  }
+}
