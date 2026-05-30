@@ -7,7 +7,11 @@
     "npm:pi-cursor-sdk",
     "npm:pi-dynamic-workflows",
     "npm:pi-ask-user-question",
-    "npm:@miclivs/pi-charts"
+    "npm:@miclivs/pi-charts",
+    "npm:pi-mcp-adapter",
+    "npm:pi-web-access",
+    "npm:pi-lens",
+    "npm:pi-simplify"
   ],
   "extensions": [],
   "enabledModels": [

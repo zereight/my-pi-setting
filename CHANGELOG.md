@@ -16,6 +16,9 @@ git checkout v0.1.0 && ./scripts/install.sh
 
 ### Added
 
+- **recent-skills** extension: MRU `/skill:name` chips above the Pi TUI editor (Alt+1…5 prefill)
+- **notify** extension: native terminal notification when Pi is idle and waiting for input (Ghostty, Kitty, iTerm2, WezTerm, Windows Terminal)
+- npm stack in light/orchestrator profiles: `pi-mcp-adapter`, `pi-web-access`, `pi-lens`, `pi-simplify` (installed by `scripts/install.sh`)
 - **render-mermaid** extension: `render_mermaid` tool (Mermaid → PNG/SVG via `mmdc`, like `render_chart`)
 - **orchestrator** profile + `pi-cursor-worker` package (Cursor `Agent.prompt` sub-tasks)
 - npm stack in light profile: `pi-dynamic-workflows`, `pi-ask-user-question`, `@miclivs/pi-charts`

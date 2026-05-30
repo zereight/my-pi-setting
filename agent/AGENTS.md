@@ -10,6 +10,17 @@
 - Start: `/step-by-step:start <topic>` · advance: `/step-by-step:next` · bulk: `skip-to`, `run-to` (reviewing only), `pause`, `stop`.
 - Docs: `agent/extensions/step-by-step/README.md`
 
+## Recent skills (Pi TUI)
+
+- Extension: `agent/extensions/recent-skills/` — MRU `/skill:name` chips above the editor; Alt+1…5 to prefill.
+- Install: `./scripts/apply.sh` → `/reload`
+- Docs: `agent/extensions/recent-skills/README.md`
+
+## Notify (Pi TUI)
+
+- Extension: `agent/extensions/notify/` — desktop/terminal notification when the agent is done and waiting for input (OSC 777 / Kitty OSC 99 / Windows toast).
+- Install: `./scripts/apply.sh` → `/reload`
+
 ## Mermaid (`render_mermaid`, Pi TUI)
 
 - Extension: `agent/extensions/render-mermaid/` — Mermaid → PNG/SVG inline (like `@miclivs/pi-charts` `render_chart`).

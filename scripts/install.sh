@@ -109,6 +109,14 @@ if command -v pi >/dev/null 2>&1; then
       run pi install npm:pi-ask-user-question
       echo "pi install: npm:@miclivs/pi-charts (https://github.com/Michaelliv/pi-charts)"
       run pi install npm:@miclivs/pi-charts
+      echo "pi install: npm:pi-mcp-adapter (https://github.com/nicobailon/pi-mcp-adapter)"
+      run pi install npm:pi-mcp-adapter
+      echo "pi install: npm:pi-web-access (https://github.com/nicobailon/pi-web-access)"
+      run pi install npm:pi-web-access
+      echo "pi install: npm:pi-lens (https://github.com/apmantza/pi-lens)"
+      run pi install npm:pi-lens
+      echo "pi install: npm:pi-simplify (https://github.com/MattDevy/pi-extensions/tree/main/packages/pi-simplify)"
+      run pi install npm:pi-simplify
       ;;
   esac
 fi

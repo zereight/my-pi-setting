@@ -25,3 +25,4 @@ versions/agent/20*/
 .pi/
 
 .DS_Store
+.atl/
