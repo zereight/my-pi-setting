@@ -17,7 +17,7 @@ Options:
   --local              Use this repo directory (no git clone)
   --repo <git-url>     Clone URL (required for remote bootstrap)
   --ref <ref>          Branch or tag (default: main)
-  --profile <name>     light | heavy (default: light)
+  --profile <name>     light | orchestrator (default: light)
   --dir <path>         Clone directory (default: ~/.local/share/my-pi-setting)
   -h, --help           Show this help
 

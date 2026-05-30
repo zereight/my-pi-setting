@@ -9,14 +9,13 @@ Pi agent 설정(`~/.pi/agent`)을 **버전 관리**해서 팀·미래의 나에�
 | 경로 | 용도 |
 |------|------|
 | `agent/settings/light.json` | Light 프로필 (`install.sh` 기본) |
-| `agent/settings/heavy.json` | Heavy 프로필 (`enableSkillCommands: false` 등) |
+| `agent/settings/orchestrator.json` | Orchestrator 프로필 (`cursor_worker` 포함) |
 | `agent/settings.json` | 현재 머신에서 pull한 **실제** light 스냅샷 |
 | `agent/AGENTS.md` | 에이전트 지침 |
 | `agent/extensions/` · `extensions.disabled/` | 확장 (아래 표) |
 | `.charts/settings.json` · `.mermaid/settings.json` | 차트/Mermaid 렌더 설정 템플릿 |
 | `agent/variants/` | `settings.json.*.bak` 백업 |
-| `shell/pi-cursor.zsh` | `pi-light` / `pi-heavy` / `pi-cursor` |
-| `templates/bankx/.pi/` | BankX 프로젝트용 `.pi/settings.json` |
+| `shell/pi-cursor.zsh` | `pi-light` / `pi-cursor` |
 | `versions/agent/<UTC>/` | 선택적 폴더 스냅샷 (git 제외 가능) |
 | `manifest.json` | 마지막 pull/apply 시각 |
 
@@ -39,7 +38,6 @@ Pi agent 설정(`~/.pi/agent`)을 **버전 관리**해서 팀·미래의 나에�
 | 경로 | 역할 |
 |------|------|
 | `agent/extensions/step-by-step/` | 단계별 빌드 + 리뷰 |
-| `agent/extensions/entry-point-lab/` | 이벤트 실험용 |
 | `agent/extensions/render-mermaid/` | `render_mermaid` — Mermaid → PNG (`mmdc` 필요) |
 
 시크릿·세션은 **제외**: `auth.json`, 토큰, `sessions/`, 모델 리스트 등 (`.gitignore` 참고).
@@ -66,7 +64,7 @@ git add -A && git status   # 확인 후 커밋
 ```bash
 git clone <this-repo> && cd my-pi-setting
 ./scripts/install.sh                    # light
-./scripts/install.sh --profile heavy
+./scripts/install.sh --profile orchestrator
 ./scripts/install.sh --shell            # ~/.zshrc에 source 줄 안내
 ```
 
@@ -111,10 +109,10 @@ PI_SETTING_REF=v0.1.0 ./scripts/bootstrap.sh --local
 
 ## 프로필
 
-| | Light | Heavy |
-|---|--------|--------|
-| 파일 | `agent/settings/light.json` | `agent/settings/heavy.json` |
-| 쉘 | `PI_CURSOR_SETTING_SOURCES=project` | `PI_CURSOR_SETTING_SOURCES=all` |
+| 프로필 | 파일 | 용도 |
+|--------|------|------|
+| **light** | `agent/settings/light.json` | 일상 코딩 (`PI_CURSOR_SETTING_SOURCES=project`) |
+| **orchestrator** | `agent/settings/orchestrator.json` | light + `pi-cursor-worker` / `cursor_worker` |
 
 Cursor CLI 모드: `agent/README-cursor-cli.md`, `agent/AGENTS.md`
 

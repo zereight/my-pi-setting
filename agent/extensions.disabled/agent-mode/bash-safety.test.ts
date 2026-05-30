@@ -597,7 +597,7 @@ test("classifyBashCommand review: allows mcporter bb_get_pr piped to head", () =
 
 test("classifyBashCommand review: allows cd && git fetch chain", () => {
   assertClassification(
-    "cd /Users/tao.exe/Documents/bankx/mobile-app-workspace && git fetch origin && git rev-parse HEAD && git branch --show-current && git log -1 --oneline",
+    "cd /Users/tao.exe/Documents/my-project && git fetch origin && git rev-parse HEAD && git branch --show-current && git log -1 --oneline",
     "review",
     "allowed",
   );
@@ -621,7 +621,7 @@ test("classifyBashCommand review: allows git log piped to head", () => {
 
 test("classifyBashCommand review: allows fuck-u-code analyze piped to head", () => {
   assertClassification(
-    'mcporter call fuck-u-code.analyze path="/Users/tao.exe/Documents/bankx/mobile-app-workspace/packages/foundation/src/lib" format=json top=15 verbose=false | head -c 80000',
+    'mcporter call fuck-u-code.analyze path="/Users/tao.exe/Documents/my-project/packages/core/src/lib" format=json top=15 verbose=false | head -c 80000',
     "review",
     "allowed",
   );

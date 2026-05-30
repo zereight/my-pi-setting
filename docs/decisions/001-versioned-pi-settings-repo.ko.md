@@ -12,7 +12,7 @@ Accepted
 
 ## 배경
 
-Pi agent 설정은 `~/.pi/agent/`에 있으며 light/heavy 프로필, 확장 on/off, Cursor SDK 환경 등으로 자주 바뀝니다. 팀과 미래의 나를 위해 공유·리뷰 가능한 복사본이 필요하지만, 시크릿·세션 데이터는 포함하면 안 됩니다.
+Pi agent 설정은 `~/.pi/agent/`에 있으며 light/orchestrator 프로필, 확장 on/off, Cursor SDK 환경 등으로 자주 바뀝니다. 팀과 미래의 나를 위해 공유·리뷰 가능한 복사본이 필요하지만, 시크릿·세션 데이터는 포함하면 안 됩니다.
 
 ## 결정
 
@@ -31,4 +31,4 @@ Pi agent 설정은 `~/.pi/agent/`에 있으며 light/heavy 프로필, 확장 on/
 
 - 로컬에서 Pi 변경 후 `./scripts/pull.sh` → 커밋.
 - 새 머신: clone → `./scripts/apply.sh` → `shell/pi-cursor.zsh` / `PI_CURSOR_SETTING_SOURCES` 설정.
-- Heavy: `agent/settings/heavy.json` 또는 `agent/variants/` — 시크릿은 커밋하지 않음.
+- Orchestrator: `agent/settings/orchestrator.json` 또는 `agent/variants/` — 시크릿은 커밋하지 않음.

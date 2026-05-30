@@ -14,7 +14,6 @@ AGENT_TRACKED_PATHS=(
   AGENTS.md
   cursor-sdk.json
   README-cursor-cli.md
-  settings.json.heavy-20260530.bak
   settings.json.pre-cursor-cli.bak
   settings.json.before-reset-20260526
   extensions
@@ -67,7 +66,7 @@ copy_agent_tree() {
   if [[ ! -e "$src" ]]; then
       continue
     fi
-    if [[ "$rel" == settings.json.heavy-* ]] || [[ "$rel" == settings.json.pre-* ]] || [[ "$rel" == settings.json.before-* ]]; then
+    if [[ "$rel" == settings.json.pre-* ]] || [[ "$rel" == settings.json.before-* ]]; then
       local base
       base="$(basename "$rel")"
       cp -R "$src" "${dest_root}/variants/${base}"
@@ -80,9 +79,6 @@ copy_agent_tree() {
     fi
   done
   # Friendly aliases for variant files
-  if [[ -f "${dest_root}/variants/settings.json.heavy-20260530.bak" ]]; then
-    cp "${dest_root}/variants/settings.json.heavy-20260530.bak" "${dest_root}/settings.heavy.json"
-  fi
   if [[ -f "${dest_root}/variants/settings.json.pre-cursor-cli.bak" ]]; then
     cp "${dest_root}/variants/settings.json.pre-cursor-cli.bak" "${dest_root}/settings.pre-cursor-cli.json"
   fi
@@ -94,8 +90,5 @@ sync_profile_json_files() {
   mkdir -p "${dest_root}/settings"
   if [[ -f "${dest_root}/settings.json" ]]; then
     cp "${dest_root}/settings.json" "${dest_root}/settings/light.json"
-  fi
-  if [[ -f "${dest_root}/settings.heavy.json" ]]; then
-    cp "${dest_root}/settings.heavy.json" "${dest_root}/settings/heavy.json"
   fi
 }

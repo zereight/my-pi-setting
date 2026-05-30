@@ -12,7 +12,7 @@ Accepted
 
 ## Context
 
-Pi agent config lives in `~/.pi/agent/` and changes over time (light vs heavy profiles, extensions on/off, Cursor SDK env). We need a shareable, reviewable copy for teammates and future self, without leaking secrets or session data.
+Pi agent config lives in `~/.pi/agent/` and changes over time (light vs orchestrator profiles, extensions on/off, Cursor SDK env). We need a shareable, reviewable copy for teammates and future self, without leaking secrets or session data.
 
 ## Decision
 
@@ -31,4 +31,4 @@ Pi agent config lives in `~/.pi/agent/` and changes over time (light vs heavy pr
 
 - After changing Pi locally, run `./scripts/pull.sh` and commit.
 - Restoring on a new machine: clone repo, `./scripts/apply.sh`, then set `PI_CURSOR_SETTING_SOURCES` from `env/pi-shell.example.zsh`.
-- Heavy profile: use `agent/settings.heavy.json` or `agent/variants/` backups, not committed secrets.
+- Orchestrator profile: `agent/settings/orchestrator.json`; variant backups under `agent/variants/` — no committed secrets.

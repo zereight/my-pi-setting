@@ -9,13 +9,12 @@ Portable, **version-controlled** snapshot of Pi agent configuration (`~/.pi/agen
 | Path | Purpose |
 |------|---------|
 | `agent/settings/light.json` | Light profile (`install.sh` default) |
-| `agent/settings/heavy.json` | Heavy profile (`enableSkillCommands: false`, etc.) |
+| `agent/settings/orchestrator.json` | Orchestrator profile (includes `cursor_worker`) |
 | `agent/settings.json` | **Live** light snapshot from last `./scripts/pull.sh` |
 | `agent/AGENTS.md` | Agent instructions |
 | `agent/extensions/` · `extensions.disabled/` | Extensions |
 | `agent/variants/` | `settings.json.*.bak` backups |
-| `shell/pi-cursor.zsh` | `pi-light` / `pi-heavy` / `pi-cursor` |
-| `templates/bankx/.pi/` | BankX project `.pi/settings.json` template |
+| `shell/pi-cursor.zsh` | `pi-light` / `pi-cursor` |
 | `versions/agent/<UTC>/` | Optional folder snapshots (may be gitignored) |
 | `manifest.json` | Last pull/apply timestamp |
 
@@ -43,7 +42,7 @@ Details: [versions.md](versions.md)
 ```bash
 git clone <this-repo> && cd my-pi-setting
 ./scripts/install.sh                    # light
-./scripts/install.sh --profile heavy
+./scripts/install.sh --profile orchestrator
 ./scripts/install.sh --shell            # prints ~/.zshrc source line
 ```
 
@@ -88,10 +87,10 @@ Release process: [RELEASE.md](RELEASE.md) · `./scripts/release.sh`
 
 ## Profiles
 
-| | Light | Heavy |
-|---|--------|--------|
-| File | `agent/settings/light.json` | `agent/settings/heavy.json` |
-| Shell | `PI_CURSOR_SETTING_SOURCES=project` | `PI_CURSOR_SETTING_SOURCES=all` |
+| Profile | File | Purpose |
+|---------|------|---------|
+| **light** | `agent/settings/light.json` | Daily coding (`PI_CURSOR_SETTING_SOURCES=project`) |
+| **orchestrator** | `agent/settings/orchestrator.json` | light + `pi-cursor-worker` / `cursor_worker` |
 
 Cursor CLI mode: `agent/README-cursor-cli.md`, `agent/AGENTS.md`
 

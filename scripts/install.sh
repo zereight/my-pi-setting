@@ -15,7 +15,7 @@ Usage: ./scripts/install.sh [options]
 Sync versioned Pi agent settings from this repo into ~/.pi/agent.
 
 Options:
-  --profile <light|heavy|orchestrator>   Settings profile (default: light)
+  --profile <light|orchestrator>   Settings profile (default: light)
   --shell                   Print how to source shell/pi-cursor.zsh in ~/.zshrc
   --dry-run                 Show actions without writing files
   --skip-backup             Do not backup existing settings.json
@@ -23,7 +23,7 @@ Options:
 
 Examples:
   ./scripts/install.sh
-  ./scripts/install.sh --profile heavy
+  ./scripts/install.sh --profile orchestrator
   PI_SETTING_REF=v0.1.0 git checkout v0.1.0 && ./scripts/install.sh
 EOF
 }
@@ -59,9 +59,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${PROFILE}" in
-  light | heavy | orchestrator) ;;
+  light | orchestrator) ;;
   *)
-    echo "error: unknown profile: ${PROFILE} (use light, heavy, or orchestrator)" >&2
+    echo "error: unknown profile: ${PROFILE} (use light or orchestrator)" >&2
     exit 1
     ;;
 esac
@@ -152,13 +152,10 @@ cat <<EOF
 Done.
   pi --version
   pi-cursor          # if shell snippet is sourced
-  pi-heavy           # PI_CURSOR_SETTING_SOURCES=all
   ./scripts/install.sh --profile orchestrator   # Pi orchestrates + cursor_worker
 
-Extensions (step-by-step, entry-point-lab, render-mermaid):
+Extensions (step-by-step, render-mermaid):
   ./scripts/apply.sh
   # then in Pi TUI: /reload
   # render-mermaid: npm i -g @mermaid-js/mermaid-cli  (mmdc on PATH)
-
-Project template (BankX): copy templates/bankx/.pi → your repo root
 EOF

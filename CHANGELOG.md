@@ -8,6 +8,12 @@ git checkout v0.1.0 && ./scripts/install.sh
 
 ## Unreleased
 
+### Removed
+
+- **heavy** profile, `pi-heavy`, and related settings/variants
+- **BankX** template (`templates/bankx/`) and BankX-specific `AGENTS.md` notes
+- **entry-point-lab** extension (learning track; use step-by-step instead)
+
 ### Added
 
 - **render-mermaid** extension: `render_mermaid` tool (Mermaid → PNG/SVG via `mmdc`, like `render_chart`)
