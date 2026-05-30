@@ -15,7 +15,7 @@ Usage: ./scripts/install.sh [options]
 Sync versioned Pi agent settings from this repo into ~/.pi/agent.
 
 Options:
-  --profile <light|heavy>   Settings profile (default: light)
+  --profile <light|heavy|orchestrator>   Settings profile (default: light)
   --shell                   Print how to source shell/pi-cursor.zsh in ~/.zshrc
   --dry-run                 Show actions without writing files
   --skip-backup             Do not backup existing settings.json
@@ -59,9 +59,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 case "${PROFILE}" in
-  light | heavy) ;;
+  light | heavy | orchestrator) ;;
   *)
-    echo "error: unknown profile: ${PROFILE} (use light or heavy)" >&2
+    echo "error: unknown profile: ${PROFILE} (use light, heavy, or orchestrator)" >&2
     exit 1
     ;;
 esac
@@ -100,6 +100,33 @@ run cp "${SETTINGS_SRC}" "${PI_AGENT_DIR}/settings.json"
 echo "agents: ${AGENTS_SRC} → ${PI_AGENT_DIR}/AGENTS.md"
 run cp "${AGENTS_SRC}" "${PI_AGENT_DIR}/AGENTS.md"
 
+if command -v pi >/dev/null 2>&1; then
+  case "${PROFILE}" in
+    light | orchestrator)
+      echo "pi install: npm:pi-dynamic-workflows (https://github.com/Michaelliv/pi-dynamic-workflows)"
+      run pi install npm:pi-dynamic-workflows
+      echo "pi install: npm:pi-ask-user-question (https://github.com/Michaelliv/pi-ask-user-question)"
+      run pi install npm:pi-ask-user-question
+      echo "pi install: npm:@miclivs/pi-charts (https://github.com/Michaelliv/pi-charts)"
+      run pi install npm:@miclivs/pi-charts
+      ;;
+  esac
+fi
+
+if [[ "${PROFILE}" == "orchestrator" ]]; then
+  WORKER_PKG="${REPO_ROOT}/pi-cursor-worker"
+  if [[ -d "${WORKER_PKG}" ]]; then
+    echo "pi-cursor-worker: npm run build"
+    run bash -c "cd \"${WORKER_PKG}\" && npm run build"
+    if command -v pi >/dev/null 2>&1; then
+      echo "pi install: ${WORKER_PKG}"
+      run pi install "${WORKER_PKG}"
+    else
+      echo "warn: pi not on PATH — run: pi install ${WORKER_PKG}"
+    fi
+  fi
+fi
+
 MARKER="${PI_AGENT_DIR}/.my-pi-setting-version"
 echo "marker: ${VERSION} (${PROFILE}) → ${MARKER}"
 if [[ "${DRY_RUN}" -eq 1 ]]; then
@@ -126,10 +153,12 @@ Done.
   pi --version
   pi-cursor          # if shell snippet is sourced
   pi-heavy           # PI_CURSOR_SETTING_SOURCES=all
+  ./scripts/install.sh --profile orchestrator   # Pi orchestrates + cursor_worker
 
-Extensions (step-by-step, entry-point-lab, …):
+Extensions (step-by-step, entry-point-lab, render-mermaid):
   ./scripts/apply.sh
   # then in Pi TUI: /reload
+  # render-mermaid: npm i -g @mermaid-js/mermaid-cli  (mmdc on PATH)
 
 Project template (BankX): copy templates/bankx/.pi → your repo root
 EOF

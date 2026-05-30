@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>my-pi-setting architecture</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+    header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+    h1 { margin: 0; font-size: 1.125rem; font-weight: 600; }
+  .tabs { display: flex; gap: 0.5rem; }
+    .tabs button {
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 0.4rem 0.85rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .tabs button.active { background: #2563eb; border-color: #3b82f6; }
+    main { padding: 1rem; }
+    .panel { display: none; max-width: 100%; overflow: auto; }
+    .panel.active { display: block; }
+    .panel img, .panel svg { max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px; background: #f8fafc; }
+    .hint { font-size: 0.8rem; color: #94a3b8; margin-top: 0.75rem; text-align: center; }
+    #mermaid-wrap { background: #f8fafc; border-radius: 8px; padding: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>my-pi-setting 레포 아키텍처</h1>
+    <div class="tabs">
+      <button type="button" class="active" data-tab="svg">SVG (권장)</button>
+      <button type="button" data-tab="mermaid">Mermaid</button>
+    </div>
+  </header>
+  <main>
+    <section id="svg" class="panel active">
+      <object data="architecture.svg" type="image/svg+xml" width="1200" height="920" aria-label="architecture diagram">
+        <img src="architecture.svg" alt="my-pi-setting architecture" />
+      </object>
+      <p class="hint">파일 직접 열기: <code>docs/ko/architecture.svg</code> — IDE SVG 미리보기 지원</p>
+    </section>
+    <section id="mermaid" class="panel">
+      <div id="mermaid-wrap">
+        <pre class="mermaid">
+flowchart TB
+  subgraph REPO["git: my-pi-setting"]
+    SCRIPTS["scripts/ pull · install · apply"]
+    AGENT["agent/ settings · extensions · AGENTS.md"]
+    WORKER["pi-cursor-worker/ cursor_worker"]
+  end
+  subgraph RT["~/.pi/agent"]
+    SET["settings.json"]
+    PKG["npm packages"]
+    TUI["Pi TUI / pi-cursor-sdk"]
+  end
+  SCRIPTS -->|"pull"| AGENT
+  SCRIPTS -->|"install / apply"| SET
+  AGENT --> SET
+  WORKER --> PKG
+  SET --> TUI
+  PKG --> TUI
+        </pre>
+      </div>
+      <p class="hint">브라우저에서만 Mermaid 렌더 — IDE 채팅 미리보기와 무관</p>
+    </section>
+  </main>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+    const tabs = document.querySelectorAll('.tabs button');
+    const panels = document.querySelectorAll('.panel');
+    let mermaidRendered = false;
+    tabs.forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        tabs.forEach((b) => b.classList.remove('active'));
+        panels.forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        const id = btn.dataset.tab;
+        document.getElementById(id).classList.add('active');
+        if (id === 'mermaid' && !mermaidRendered) {
+          await mermaid.run({ querySelector: '.mermaid' });
+          mermaidRendered = true;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

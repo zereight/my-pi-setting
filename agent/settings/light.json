@@ -5,7 +5,9 @@
   "defaultThinkingLevel": "off",
   "packages": [
     "npm:pi-cursor-sdk",
-    "npm:pi-dynamic-workflows"
+    "npm:pi-dynamic-workflows",
+    "npm:pi-ask-user-question",
+    "npm:@miclivs/pi-charts"
   ],
   "extensions": [],
   "enabledModels": [

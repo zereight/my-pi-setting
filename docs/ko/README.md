@@ -12,12 +12,35 @@ Pi agent 설정(`~/.pi/agent`)을 **버전 관리**해서 팀·미래의 나에�
 | `agent/settings/heavy.json` | Heavy 프로필 (`enableSkillCommands: false` 등) |
 | `agent/settings.json` | 현재 머신에서 pull한 **실제** light 스냅샷 |
 | `agent/AGENTS.md` | 에이전트 지침 |
-| `agent/extensions/` · `extensions.disabled/` | 확장 |
+| `agent/extensions/` · `extensions.disabled/` | 확장 (아래 표) |
+| `.charts/settings.json` · `.mermaid/settings.json` | 차트/Mermaid 렌더 설정 템플릿 |
 | `agent/variants/` | `settings.json.*.bak` 백업 |
 | `shell/pi-cursor.zsh` | `pi-light` / `pi-heavy` / `pi-cursor` |
 | `templates/bankx/.pi/` | BankX 프로젝트용 `.pi/settings.json` |
 | `versions/agent/<UTC>/` | 선택적 폴더 스냅샷 (git 제외 가능) |
 | `manifest.json` | 마지막 pull/apply 시각 |
+
+**아키텍처 다이어그램 (미리보기 가능):** [architecture.svg](architecture.svg) · [architecture.html](architecture.html) (브라우저)
+
+**Mermaid 인라인 렌더 (Pi TUI):** [agent/extensions/render-mermaid/README.md](../../agent/extensions/render-mermaid/README.md) — `render_mermaid` 도구 (`mmdc` 필요)
+
+### npm 패키지 (light / orchestrator, `install.sh`가 설치)
+
+| 패키지 | 도구·역할 |
+|--------|-----------|
+| `npm:pi-cursor-sdk` | Cursor Composer 메인 루프 |
+| `npm:pi-dynamic-workflows` | `workflow` — Pi subagent fan-out / pipeline |
+| `npm:pi-ask-user-question` | 사용자 선택 질문 |
+| `npm:@miclivs/pi-charts` | `render_chart`, `chart_schema` |
+| `pi-cursor-worker` (orchestrator만) | `cursor_worker` — 별도 Cursor SDK run (`install.sh --profile orchestrator`) |
+
+### 로컬 확장 (`./scripts/apply.sh` 후 `/reload`)
+
+| 경로 | 역할 |
+|------|------|
+| `agent/extensions/step-by-step/` | 단계별 빌드 + 리뷰 |
+| `agent/extensions/entry-point-lab/` | 이벤트 실험용 |
+| `agent/extensions/render-mermaid/` | `render_mermaid` — Mermaid → PNG (`mmdc` 필요) |
 
 시크릿·세션은 **제외**: `auth.json`, 토큰, `sessions/`, 모델 리스트 등 (`.gitignore` 참고).
 

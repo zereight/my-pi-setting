@@ -17,4 +17,11 @@ agent/npm/node_modules/
 # Optional UTC snapshots (git history is enough for most teams)
 versions/agent/20*/
 
+# Tool render output (keep settings.json)
+.charts/output/
+.mermaid/output/
+
+# Local Pi project cache (not team settings)
+.pi/
+
 .DS_Store

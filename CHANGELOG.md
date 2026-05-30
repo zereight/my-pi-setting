@@ -10,6 +10,11 @@ git checkout v0.1.0 && ./scripts/install.sh
 
 ### Added
 
+- **render-mermaid** extension: `render_mermaid` tool (Mermaid → PNG/SVG via `mmdc`, like `render_chart`)
+- **orchestrator** profile + `pi-cursor-worker` package (Cursor `Agent.prompt` sub-tasks)
+- npm stack in light profile: `pi-dynamic-workflows`, `pi-ask-user-question`, `@miclivs/pi-charts`
+- Architecture docs: `docs/ko/architecture.svg`, `architecture.html`
+- Tool output dirs: `.charts/`, `.mermaid/` settings templates (output gitignored)
 - **step-by-step** extension: `pause`, `resume`, `stop`, `skip-to`, `run-to`; queue step prompts via `deliverAs: "followUp"` to avoid agent race errors
 - Bilingual docs: `docs/ko/`, `docs/en/`, hub `README.md` and `docs/README.md`
 - `scripts/pull.sh` — sync `~/.pi/agent` → `agent/` (optional `--snapshot`)

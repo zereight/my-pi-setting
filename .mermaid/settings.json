@@ -1,0 +1,8 @@
+{
+  "saveToDisk": true,
+  "format": "png",
+  "theme": "neutral",
+  "background": "transparent",
+  "width": 1200,
+  "maxWidthCells": 90
+}
